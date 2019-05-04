@@ -4,10 +4,37 @@ import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
-
+import string
+import nltk
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.stem.snowball import SnowballStemmer
 
 #read in the data
 data = pd.read_json("data/data.json")
+
+def clean_description(df):
+
+    #remove HTML tags from each event's description
+    #store it in a new column called "parsed_desc"
+    df['parsed_desc'] = ""
+    for n in range(df.shape[0]):
+        soup = BeautifulSoup(df.description.iloc[n]).text.replace("\xa0", " ").replace("\n", " ").lower()
+        df["parsed_desc"].iloc[n] = soup
+    
+    #remove punctuation and stopwords for each event and store it in
+    #column called "parsed_desc_no_punc_or_stops"
+    df["parsed_desc_no_punc_or_stops"] = ""
+    for i in range(df.shape[0]):
+        desc_no_punc_or_stops = []
+        doc = df.parsed_desc.iloc[i]\
+                    .translate(str.maketrans('', '', string.punctuation))
+        for word in doc.split():
+            if word not in stop_words:
+                desc_no_punc_or_stops.append(word)
+        
+        df.parsed_desc_no_punc_or_stops.iloc[i] = ' '.join(desc_no_punc_or_stops)
+    
+    return df
 
 def add_features(df):
 
@@ -46,8 +73,8 @@ def add_features(df):
     #combine the two dataframes
     df = df.join(email_type)
 
-    #what's in the description of each event?
-
+    #using the previous function to clean up the description feature
+    df = clean_description(df)
 
     return df
     
