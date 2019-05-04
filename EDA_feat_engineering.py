@@ -8,6 +8,7 @@ import string
 import nltk
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.stem.snowball import SnowballStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
 #read in the data
 data = pd.read_json("data/data.json")
@@ -78,3 +79,33 @@ def add_features(df):
 
     return df
     
+def top_word_combo(df, min = 0.005, max = 0.5, features = 20):
+
+    #create a corpus of all parsed descriptions
+    corpus = df.parsed_desc.tolist()
+    #instantiate TfidfVectorizer
+    vectorizer = TfidfVectorizer(ngram_range = (2,2),\
+                                min_df=min, \
+                                max_df=max, \
+                                max_features=50, \
+                                stop_words ="english",\
+                                token_pattern='\S+')
+    tfidf = vectorizer.fit_transform(corpus)
+
+    #convert into a matrix
+    #identifying the top features
+    sort_feat = np.argsort(tfidf.toarray()).flatten()[::-1]
+
+    #array of feature names
+    feat_names = np.array(vectorizer.get_feature_names())
+
+    #top features we want to incorporate into our model
+    top_features = feat_names[sort_feat][:features]
+
+    #create a dataframe of the tfidf vector
+    tfidf_vect = pd.DataFrame(tfidf.toarray(), \
+                            columns = vectorizer.get_feature_names())
+    #combine the 2 data frames
+    df = df.join(tfidf_vect)
+
+    return df
