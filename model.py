@@ -33,3 +33,6 @@ def prediction(df, features):
     predictions = clf.predict(X_test)
 
     return predictions
+
+def score(predictions, actual):
+    return accuracy_score(y_test, predictions)
