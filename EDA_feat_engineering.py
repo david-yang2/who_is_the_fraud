@@ -77,6 +77,9 @@ def add_features(df):
     #using the previous function to clean up the description feature
     df = clean_description(df)
 
+    #replace NaNs in column has_header with 0
+    df.has_header = df.has_header.fillna(value = 0)
+    
     return df
     
 def top_word_combo(df, min = 0.005, max = 0.5, features = 20):
